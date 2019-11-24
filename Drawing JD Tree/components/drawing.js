@@ -53,7 +53,7 @@ ipcRenderer.on('send-item', (e, item1) => {
             }).hide()
             $divList = $("div.list")
             $li = $("li")
-            $cluster= $('div.cluster')
+            $cluster = $('div.cluster')
 
             // hover
             $cluster.on('mouseenter', function () {
@@ -100,7 +100,7 @@ const generateNewGraph = (oldJD) => {
             }
         }
         newClusters.forEach(element => {
-            element = element.split(',').filter( ( el ) => !notToIncludeList.has( el )).join(',');
+            element = element.split(',').filter((el) => !notToIncludeList.has(el)).join(',');
             if (element.length > 0) {
                 let temp = {
                     text: {name: element},
