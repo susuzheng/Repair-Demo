@@ -43,11 +43,6 @@ ipcRenderer.on('send-item', (e, item1) => {
                 allClusterList.push(chart_config[i].text.name)
             }
             $li.filter((index) => {
-                // newClusters.filter(value => {
-                //     console.log(node.text.name.split(','))
-                //     console.log(value.split(','))
-                //     return ArrayContainChecker(node.text.name.split(','), value.split(','))
-                // })
                 let temp = $li.eq(index).text()
                 return !filterList(temp) || allClusterList.includes(temp)
             }).hide()
