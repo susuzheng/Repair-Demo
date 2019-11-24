@@ -1,0 +1,33 @@
+html, body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-content: center;
+  align-items: center;
+}
+
+div.button {
+  width: 100%;
+  text-align: center;
+}
+
+div.list {
+  width: 50%;
+  display: block;
+  border: 2px solid lightgray;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.list ul {
+    display: inline-block;
+    /* margin: 0;
+    padding: 0; */
+}
+.list li {
+    float: left;
+    padding: 2px 5px;
+    border: 1px solid black;
+}

@@ -1,0 +1,22 @@
+{
+  "name": "first_electron",
+  "version": "1.0.0",
+  "description": "learning electron!",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "watch": "nodemon --exec 'electron .'"
+  },
+  "author": "Steven Su",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^6.1.4",
+    "electron-rebuild": "^1.8.6",
+    "nodemon": "^1.19.4"
+  },
+  "dependencies": {
+    "jquery": "^3.4.1",
+    "line-reader": "^0.4.0",
+    "treant-js": "^1.0.1"
+  }
+}
