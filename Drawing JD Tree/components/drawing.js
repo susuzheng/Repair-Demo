@@ -3,143 +3,296 @@ const {ipcRenderer} = require('electron')
 let item
 // first contains second
 let ArrayContainChecker = (currList, cluList) => cluList.every(v => currList.includes(v))
+const prefixToWord = {};
+const wordToPrefix = {};
 
 
 ipcRenderer.send('get-item')
 
 ipcRenderer.on('send-item', (e, item1) => {
     item = item1
-    drawInit(item.attrNum)
+    drawInit(item)
     // drawList(item)
-    let list = Object.keys(item.sepCluster).sort()
+    getPrefixToWord()
+    getWordToPrefix()
     $(function () {
+        let list = Object.keys(item.sepCluster).sort()
         let $divList = $("div.list")
         $divList.html("<ul></ul>");
-        for (let i in list) {
-            $("ul").append("<li>" + list[i]);
-        }
+
+        // init sep selection list
+        list.forEach(element => {
+            let shortedList = []
+            element.split(', ').forEach(attr => {
+                shortedList.push(wordToPrefix[attr])
+            })
+            $("ul").append("<li>" + shortedList.join(', '));
+        })
+
         let $li = $("li")
-        let $cluster = $('div.cluster')
 
         $(document).on("click", function (e) {
             if (e.target === document || e.target.tagName === "BODY" || e.target.tagName === "HTML" || e.target.tagName === "DIV") {
-                $(".active").toggleClass("active");
+                let $active = $(".active")
+                $active.changeWordToPrefix()
+                $active.toggleClass("active");
             }
         });
 
 
         $li.on('click', function () {
-            $(".active").toggleClass("active");
+            let $active = $(".active")
+            $active.changeWordToPrefix()
+            $active.toggleClass("active");
+            $(this).changePrefixToWord()
             $(this).toggleClass("active");
         });
 
-        // update
+        // update when double clicking
         $li.on('dblclick', function () {
             let text = $(this).text()
-            generateNewGraph(text)
-            let allClusterList = []
-            console.log(chart_config)
-            for (let i = 1; i < chart_config.length; i++) {
-                allClusterList.push(chart_config[i].text.name)
-            }
+            generateNewGraph(text, tree_config)
+            generateNewGraph(text, plan_config)
+            chart.destroy()
+            chart = new Treant(chart_config)
             $li.filter((index) => {
                 let temp = $li.eq(index).text()
-                return !filterList(temp) || allClusterList.includes(temp)
+                temp = toggleWordToPrefix(temp, prefixToWord)
+                return !filterList(temp) || notValidSepHere(temp)
             }).hide()
             $divList = $("div.list")
-            $li = $("li")
-            $cluster = $('div.cluster')
 
             // hover
-            $cluster.on('mouseenter', function () {
-                let IDs = []
-                console.log($(this).text())
-                $(this).addClass('activeCluster')
-                $li.filter((index) => {
-                    let boo = !filterListForCluster($li.eq(index).text(), $(this).text())
-                    if (boo && $li.eq(index).is(':visible')) IDs.push(index)
-                    return boo
-                }).hide()
-
-                $cluster.on('mouseleave', () => {
-                    IDs.forEach((value) => {
-                        $li.eq(value).show()
-                    })
-                    $(this).removeClass('activeCluster')
-                })
-            })
-        })
-    });
+            hoverAction()
+        });
+    })
 })
 
-const generateNewGraph = (oldJD) => {
-    let newClusters = item.sepCluster[oldJD]
-    // console.log(newClusters)
-    newClusters = newClusters.substring(1, newClusters.length - 1).split('},{') //array
-    let indexInConfig = getIndexInConfig(chart_config, oldJD)
+const generateNewGraph = (oldJD, config) => {
+    let newClustersString = item.sepCluster[oldJD]
+    let oldJDList = oldJD.split(', ').sort()
+    let newClusters = newClustersString.substring(1, newClustersString.length - 1).split('},{') //array
+    let indexInConfig = getIndexInConfig(config, oldJD)
     if (indexInConfig > -1) {
-        let node = chart_config[indexInConfig]
-        node.text.name = oldJD
-        delete node.HTMLclass
+        let node = config[indexInConfig]
+        let nodeNameList = node.text.name.split(',\n')
+
+        // change old cluster
+        let originalCluName = node.text.name
+        if (config === tree_config) {
+            let firstClu = newClusters.shift()
+            node.text.name = originalCluName.split(',\n')
+                .filter(attr => firstClu.includes(attr)).concat(oldJDList).sort().join(',\n')
+            names[names.indexOf(originalCluName)] = node.text.name
+        } else {
+            node.text.name = oldJD.split(', ').sort().join(',\n')
+            delete node.HTMLclass
+        }
+
         if (typeof node.children !== typeof []) {
             node.children = []
         }
 
-
-        let notToIncludeList = new Set()
-        // init notToIncludeList
-        for (let i = 1; i < chart_config.length; i++) {
-            let temp = chart_config[i].text.name.split(',')
-            for (let j = 0; j < temp.length; j++) {
-                notToIncludeList.add(temp[j])
+        if (config === tree_config) {
+            // add sep
+            let sepNode = {
+                text: {name: oldJDList.join(',\n')},
+                children: []
             }
+            node.children.push(sepNode)
+            config.push(sepNode)
+            names.splice(names.indexOf(originalCluName))
+            oldJDList.forEach(attr => seps.push(attr))
+            node = sepNode
         }
+
         newClusters.forEach(element => {
-            element = element.split(',').filter((el) => !notToIncludeList.has(el)).join(',');
-            if (element.length > 0) {
-                let temp = {
-                    text: {name: element},
+            let cluNodeName = element.split(', ').filter(el => nodeNameList.includes(el))
+            if (cluNodeName.length > 0) {
+                cluNodeName = cluNodeName.concat(oldJDList).sort().join(',\n')
+                let cluNode = {
+                    text: {name: cluNodeName},
+                    children: [],
                     HTMLclass: 'cluster'
                 }
-                chart_config.push(temp)
-                node.children.push(temp)
+                node.children.push(cluNode)
+                config.push(cluNode)
+                names.push(cluNodeName)
             }
         })
-        chart.destroy()
-        chart = new Treant(chart_config)
-        // console.log(chart_config)
-        // console.log(chart)
     } else {
         console.log(oldJD)
         console.log('cannot find in config')
     }
+}
 
+// const generateNewPlanGraph = (oldJD) => {
+//     let newClusters = item.sepCluster[oldJD]
+//     newClusters = newClusters.substring(1, newClusters.length - 1).split('},{') //array
+//     let indexInConfig = getIndexInConfig(plan_config, oldJD)
+//     if (indexInConfig > -1) {
+//         let node = plan_config[indexInConfig]
+//         let nodeNameList = node.text.name.split(',\n')
+//
+//         // change old cluster to separator
+//         node.text.name = oldJD.split(', ').sort().join(',\n')
+//         delete node.HTMLclass
+//         if (typeof node.children !== typeof []) {
+//             node.children = []
+//         }
+//
+//         newClusters.forEach(element => {
+//             element = element.split(', ').filter((el) => nodeNameList.includes(el));
+//             if (element.length > 0) {
+//                 let temp = {
+//                     text: {name: element.concat(oldJD.split(', ')).sort().join(',\n')},
+//                     HTMLclass: 'cluster'
+//                 }
+//                 plan_config.push(temp)
+//                 node.children.push(temp)
+//                 plan_names.push(temp.text.name)
+//             }
+//         })
+//     } else {
+//         console.log(oldJD)
+//         console.log('cannot find in config')
+//     }
+//
+// }
+
+// check if the given oldJD can separate sth. out
+const notValidSepHere = (oldJD) => {
+    let newClustersString = item.sepCluster[oldJD]
+    let newClusters = newClustersString.substring(1, newClustersString.length - 1).split('},{') //array
+    let nodeNameList = names.filter(name =>
+        ArrayContainChecker(name.split(',\n'), oldJD.split(', '))
+    )
+    let boo = false
+    nodeNameList.forEach(name => {
+        let nameList = name.split(',\n')
+        let count = 0
+        newClusters.forEach(element => {
+            if (element.split(', ').filter(el => nameList.includes(el)).length > 0) {
+                count++
+            }
+        })
+        if (count <= 1) {
+            boo = true
+        }
+    })
+
+    return boo
+}
+
+// convert a list to an object mapping distinguishable prefixes to words
+// must be called after DrawInit()
+const getPrefixToWord = () => {
+    let root = {}
+    initList.forEach(element => {
+        insertToTrie(element, root)
+    })
+    initList.forEach(element => {
+        prefixToWord[getPrefixFromTrie(element, root)] = element
+    })
+}
+
+// helper for getPrefixToWord
+const getPrefixFromTrie = (str, node) => {
+    node = node[str.charAt(0)]
+    let i = 1, mark = 1
+    while (i < str.length) {
+        if (Object.keys(node).length > 1) {
+            mark = i + 1
+        }
+        node = node[str.charAt(i++)]
+    }
+    return str.substring(0, mark)
+}
+
+// helper for getPrefixToWord
+const insertToTrie = (remaining, node) => {
+    if (remaining.length > 0) {
+        let char = remaining.charAt(0)
+        if (node[char] == null) {
+            node[char] = {}
+        }
+        insertToTrie(remaining.substring(1), node[char])
+    }
+}
+
+// call after getPrefixToWord()
+const getWordToPrefix = () => {
+    for (let [key, value] of Object.entries(prefixToWord)) {
+        wordToPrefix[value] = key
+    }
 }
 
 // check if any cluster contain the certain JD
 const filterList = (JD) => {
-    JD = JD.split(',')
-    for (let i = 1; i < chart_config.length; i++) {
-        let clusterArray = chart_config[i].text.name.split(',')
-        if (chart_config[i].HTMLclass === 'cluster' && ArrayContainChecker(clusterArray, JD)) {
-            return true;
-        }
-    }
-    return false;
+    JD = JD.split(', ')
+    return names.some(name => ArrayContainChecker(name.split(',\n'), JD))
 }
 
 const filterListForCluster = (JD, cluster) => {
-    JD = JD.split(',')
-    let clusterArray = cluster.split(',')
+    JD = JD.split(', ')
+    let clusterArray = cluster.split(',\n')
     return ArrayContainChecker(clusterArray, JD)
 }
 
 const getIndexInConfig = (config, oldJD) => {
-    let cluList = oldJD.split(',')
+    let cluList = oldJD.split(', ')
     for (let i = 1; i < config.length; i++) {
-        if (chart_config[i].HTMLclass === 'cluster' && ArrayContainChecker(config[i].text.name.split(','), cluList)) {
+        if (config[i].HTMLclass === 'cluster' && ArrayContainChecker(config[i].text.name.split(',\n'), cluList)) {
             return i
         }
     }
     return -1
+}
+
+const toggleWordToPrefix = function (oldText, dict) {
+    let shortedList = []
+    oldText.split(', ').forEach(attr => {
+        shortedList.push(dict[attr])
+    })
+    return shortedList.join(', ')
+}
+
+// jquery functions
+jQuery.fn.changeWordToPrefix = function () {
+    let o = $(this[0])
+    o.text(function (i, oldText) {
+        return toggleWordToPrefix(oldText, wordToPrefix)
+    });
+    return this
+}
+
+jQuery.fn.changePrefixToWord = function () {
+    let o = $(this[0])
+    o.text(function (i, oldText) {
+        return toggleWordToPrefix(oldText, prefixToWord)
+    });
+    return this
+}
+
+const hoverAction = function () {
+    const $li = $('li')
+    const $cluster = $('div.cluster')
+    $cluster.on('mouseenter', function () {
+        let IDs = []
+        $(this).addClass('activeCluster')
+        $li.filter((index) => {
+            let curr = $li.eq(index)
+            let boo = !filterListForCluster(curr.attr('class') === 'active' ?
+                curr.text() : toggleWordToPrefix(curr.text(), prefixToWord), $(this).text())
+            if (boo && curr.is(':visible')) IDs.push(index)
+            return boo
+        }).hide()
+
+        $cluster.on('mouseleave', () => {
+            IDs.forEach((value) => {
+                $li.eq(value).show()
+            })
+            $(this).removeClass('activeCluster')
+        })
+    })
 }

@@ -35,7 +35,7 @@ function createWindow() {
     mainWindow.loadFile('app.html');
 
     // Open DevTools - Remove for PRODUCTION!
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
 
     // Listen for window being closed
     mainWindow.on('closed', () => {

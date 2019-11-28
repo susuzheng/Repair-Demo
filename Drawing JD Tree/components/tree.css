@@ -21,12 +21,17 @@ body {
     color: #9CB5ED;
     border: 2px solid #C8C8C8;
     border-radius: 3px;
+    display: inline-block;
+    height: auto;
+    overflow: hidden;
+    /*white-space: nowrap;*/
+    white-space: pre-line;
 }
 
 .node p {
     font-size: 20px;
     line-height: 20px;
-    height: 20px;
+    /*height: auto;*/
     font-weight: bold;
     padding: 3px;
     margin: 0;

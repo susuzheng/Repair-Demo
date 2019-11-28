@@ -1,0 +1,37 @@
+9,{{children, housing, finance}|{parents, has_nurs, social, health, ano_health},{complete}},0.08927039348291999
+9,{{form, housing, finance, social, health, ano_health}|{parents, has_nurs},{children}},0.07787531065438635
+9,{{parents, has_nurs, housing, ano_health}|{children, social, health},{complete},{finance}},0.09818345502017856
+9,{{has_nurs, children, housing, health, ano_health}|{parents, form},{finance},{social}},0.09114353359782257
+9,{{has_nurs, housing, social, health, ano_health}|{parents},{form, children},{finance}},0.0928992516302074
+9,{{form, children}|{parents, has_nurs, housing, social, health, ano_health},{finance}},0.06851851851718216
+9,{{parents, has_nurs, form, children, finance, ano_health}|{health},{housing},{social}},0.09721792923623518
+9,{{parents, has_nurs, children, health, ano_health}|{form, finance},{housing},{social}},0.09525275717497728
+9,{{parents, has_nurs, children, health, ano_health}|{form, housing},{finance},{social}},0.07514129420584403
+9,{{has_nurs, form, children, social, health}|{parents, housing, ano_health},{finance}},0.06851851851721769
+9,{{parents, has_nurs, form, children, ano_health}|{social, health},{housing},{finance}},0.09298506795187755
+9,{{parents, has_nurs, children, social, ano_health}|{housing, health},{complete},{finance}},0.09560975054540144
+9,{{parents, has_nurs, children, social, ano_health}|{health},{form, housing},{finance}},0.09169673067193251
+9,{{parents, has_nurs, form, social, health, ano_health}|{children},{housing},{finance}},0.09526894713482825
+9,{{has_nurs, children, housing, ano_health}|{complete},{finance},{parents, social, health}},0.0901131411848155
+9,{{parents, has_nurs, form, health, ano_health}|{finance},{social},{children, housing}},0.0854327425612258
+9,{{parents, form, children, housing, finance, social, ano_health}|{health},{has_nurs}},0.0963126938433323
+9,{{parents, has_nurs, health, ano_health}|{form, children, housing},{social},{finance}},0.09555635654805172
+9,{{parents, has_nurs, finance, health, ano_health}|{complete},{social},{children, housing}},0.0974067220967001
+9,{{has_nurs, form, housing, health, ano_health}|{parents, social},{children},{finance}},0.09622235978469185
+9,{{parents, has_nurs, children, housing, ano_health}|{form, health},{finance},{social}},0.08871608722340163
+9,{{children, finance, social}|{parents, has_nurs, housing, health, ano_health},{complete}},0.08927039348291999
+9,{{form, children, housing, social}|{parents, has_nurs, health, ano_health},{finance}},0.06851851851712709
+9,{{parents, has_nurs, housing, ano_health}|{social, health},{form, children},{finance}},0.09828167434095825
+9,{{parents, children, housing, health, ano_health}|{has_nurs, social},{complete},{finance}},0.09907071964053493
+9,{{parents, has_nurs, form, finance, social, ano_health}|{health},{children},{housing}},0.09817989532497329
+9,{{has_nurs, housing, social, health, ano_health}|{parents, children},{complete},{finance}},0.09538749993953388
+9,{{parents, has_nurs, form, children}|{housing, social, health, ano_health},{finance}},0.0685185185171715
+9,{{has_nurs, form, children, social, health, ano_health}|{parents},{housing},{finance}},0.0946869066870466
+9,{{children, housing, social, health, ano_health}|{parents, has_nurs},{complete},{finance}},0.0972664268399619
+9,{{form, housing, social}|{parents, has_nurs, children, health, ano_health},{finance}},0.06851851851719282
+9,{{has_nurs, form, children, housing, social, ano_health}|{parents},{health},{finance}},0.09438996816472844
+9,{{form, children, finance, social, health, ano_health}|{parents, has_nurs},{housing}},0.09936937720694239
+9,{{form, children, housing, finance, health, ano_health}|{parents, has_nurs},{social}},0.08076159712141973
+9,{{parents, has_nurs, finance, health, ano_health}|{complete},{children},{housing, social}},0.09780725784330713
+9,{{parents, has_nurs, form, housing, ano_health}|{children, health},{finance},{social}},0.09552682403954016
+9,{{has_nurs, form, housing, health, ano_health}|{parents, children},{finance},{social}},0.09728615148386588

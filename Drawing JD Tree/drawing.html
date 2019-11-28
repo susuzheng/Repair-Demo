@@ -25,7 +25,24 @@
     <div class='list'></div>
 </div>
 
-<div class='container' id='right'></div>
+
+<div class='container' id='right'>
+    <div id='tree'></div>
+    <div id='buttons'>
+        <button id='change_layout' onclick="
+            chart.destroy()
+            chart_config = chart_config === tree_config ? plan_config : tree_config
+            chart = new Treant(chart_config)
+            hoverAction()
+        ">change the layout</button>
+        <button id='refresh' onclick="
+            chart.destroy();
+            chart = new Treant(chart_config)
+            hoverAction()
+        ">refresh
+        </button>
+    </div>
+</div>
 
 <script>
     let chart = new Treant(chart_config)

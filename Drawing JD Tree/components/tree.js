@@ -17,18 +17,28 @@
 //     }
 //
 // let chart_config = [config, parent_node, first_child, second_child]
-let config = {container: "#right"}, chart_config = [config]
+let config = {
+        container: "#tree",
+        // rootOrientation: 'WEST'
+    },
+    chart_config = [], tree_config = [config], plan_config = [config],
+    names = [], seps = [], initList;
 
-const drawInit = (attrNum) => {
-    let oneToN = '0'
-    for (let i = 1; i <attrNum; i++) {
-        oneToN += ',' + i
-    }
+const drawInit = (item) => {
+    let set = new Set()
+    let keyArray = Object.keys(item.sepCluster)
+    keyArray.forEach(element =>
+        element.split(', ').forEach(element => set.add(element))
+    )
+    initList = Array.from(set)
     let parent_node = {
-        text: {name: oneToN},
+        text: {name: initList.join(',\n')},
         HTMLclass: 'cluster'
     }
-    chart_config.push(parent_node)
+    plan_config.push(parent_node)
+    tree_config.push(JSON.parse(JSON.stringify(parent_node)))
+    names.push(parent_node.text.name)
 
-
+    // init as plan configuration
+    chart_config = tree_config
 }

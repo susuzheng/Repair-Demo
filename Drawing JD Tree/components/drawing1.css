@@ -7,16 +7,27 @@ body {
 }
 body {
     display: flex;
-
 }
 
 div.container {
     border: 5px solid lightgray;
     border-radius: 5px;
-    width: 50%;
+    width: 20%;
+    padding: 0 20px;
     height: 98%;
     overflow: scroll;
+}
 
+div#right {
+    width: 80%;
+}
+
+button {
+    /*display: inline-block;*/
+}
+
+div#tree {
+    height: 95%;
 }
 
 div.list {
