@@ -9,7 +9,6 @@ ipcMain.on('open-dialog', e => {
     dialog.showOpenDialog(mainWindow, {
         buttonLabel: 'Select'
     }, file => {
-        console.log(file[0])
         e.sender.send('set-filepath-success', file[0])
     })
 });

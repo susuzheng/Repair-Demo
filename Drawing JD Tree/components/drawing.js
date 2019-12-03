@@ -5,6 +5,7 @@ let item
 let ArrayContainChecker = (currList, cluList) => cluList.every(v => currList.includes(v))
 const prefixToWord = {};
 const wordToPrefix = {};
+const RIGHT_ARROW = ' → ';
 
 
 ipcRenderer.send('get-item')
@@ -22,11 +23,13 @@ ipcRenderer.on('send-item', (e, item1) => {
 
         // init sep selection list
         list.forEach(element => {
-            let shortedList = []
-            element.split(', ').forEach(attr => {
-                shortedList.push(wordToPrefix[attr])
+            let shortedSepText = toggleWordToPrefix(element, wordToPrefix)
+            let clusters = item.sepCluster[element]
+            let shortedCluList = []
+            clusters.substring(1, clusters.length - 1).split('},{').forEach(cluster => {
+                shortedCluList.push('{' + toggleWordToPrefix(cluster, wordToPrefix) + '}')
             })
-            $("ul").append("<li>" + shortedList.join(', '));
+            $("ul").append("<li>" + shortedSepText + RIGHT_ARROW + shortedCluList.join(' | '));
         })
 
         let $li = $("li")
@@ -50,16 +53,30 @@ ipcRenderer.on('send-item', (e, item1) => {
 
         // update when double clicking
         $li.on('dblclick', function () {
-            let text = $(this).text()
+            let text = $(this).text().split(RIGHT_ARROW)[0]
             generateNewGraph(text, tree_config)
             generateNewGraph(text, plan_config)
             chart.destroy()
             chart = new Treant(chart_config)
             $li.filter((index) => {
-                let temp = $li.eq(index).text()
+                let temp = $li.eq(index).text().split(RIGHT_ARROW)[0]
                 temp = toggleWordToPrefix(temp, prefixToWord)
                 return !filterList(temp) || notValidSepHere(temp)
             }).hide()
+
+            $li.is(':hidden', (index, element) => {
+                let list = element.split()
+                let sepList = list[0].split(', ')
+                let cluText = list[1]
+                let newCluList = []
+                cluText.substring(1, cluText.length - 1).split('},{').forEach(cluster => {
+                    let filteredCluText = cluster.split(', ').filter(el => sepList.includes(el)).join(', ')
+                    if (filteredCluText.length > 0) {
+                        newCluList.push('{' + filteredCluText + '}')
+                    }
+                })
+                $(this).text(list[0] + RIGHT_ARROW + newCluList)
+            })
             $divList = $("div.list")
 
             // hover
@@ -125,40 +142,6 @@ const generateNewGraph = (oldJD, config) => {
         console.log('cannot find in config')
     }
 }
-
-// const generateNewPlanGraph = (oldJD) => {
-//     let newClusters = item.sepCluster[oldJD]
-//     newClusters = newClusters.substring(1, newClusters.length - 1).split('},{') //array
-//     let indexInConfig = getIndexInConfig(plan_config, oldJD)
-//     if (indexInConfig > -1) {
-//         let node = plan_config[indexInConfig]
-//         let nodeNameList = node.text.name.split(',\n')
-//
-//         // change old cluster to separator
-//         node.text.name = oldJD.split(', ').sort().join(',\n')
-//         delete node.HTMLclass
-//         if (typeof node.children !== typeof []) {
-//             node.children = []
-//         }
-//
-//         newClusters.forEach(element => {
-//             element = element.split(', ').filter((el) => nodeNameList.includes(el));
-//             if (element.length > 0) {
-//                 let temp = {
-//                     text: {name: element.concat(oldJD.split(', ')).sort().join(',\n')},
-//                     HTMLclass: 'cluster'
-//                 }
-//                 plan_config.push(temp)
-//                 node.children.push(temp)
-//                 plan_names.push(temp.text.name)
-//             }
-//         })
-//     } else {
-//         console.log(oldJD)
-//         console.log('cannot find in config')
-//     }
-//
-// }
 
 // check if the given oldJD can separate sth. out
 const notValidSepHere = (oldJD) => {
@@ -261,7 +244,12 @@ const toggleWordToPrefix = function (oldText, dict) {
 jQuery.fn.changeWordToPrefix = function () {
     let o = $(this[0])
     o.text(function (i, oldText) {
-        return toggleWordToPrefix(oldText, wordToPrefix)
+        let oldList = oldText.split(RIGHT_ARROW)
+        let oldShortedCluList = []
+        oldList[1].substring(1, oldList[1].length - 1).split('} | {').forEach(cluster => {
+            oldShortedCluList.push('{' + toggleWordToPrefix(cluster, wordToPrefix) + '}')
+        })
+        return toggleWordToPrefix(oldList[0], wordToPrefix) + RIGHT_ARROW + oldShortedCluList.join(' | ')
     });
     return this
 }
@@ -269,7 +257,12 @@ jQuery.fn.changeWordToPrefix = function () {
 jQuery.fn.changePrefixToWord = function () {
     let o = $(this[0])
     o.text(function (i, oldText) {
-        return toggleWordToPrefix(oldText, prefixToWord)
+        let oldList = oldText.split(RIGHT_ARROW)
+        let oldShortedCluList = []
+        oldList[1].substring(1, oldList[1].length - 1).split('} | {').forEach(cluster => {
+            oldShortedCluList.push('{' + toggleWordToPrefix(cluster, prefixToWord) + '}')
+        })
+        return toggleWordToPrefix(oldList[0], prefixToWord) + RIGHT_ARROW + oldShortedCluList.join(' | ')
     });
     return this
 }
