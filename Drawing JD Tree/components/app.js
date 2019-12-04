@@ -20,7 +20,7 @@ ipcRenderer.on('set-filepath-success', (e, file) => {
 const checkValidity = (filePath) => {
     let re = /^(\d+?),{{(\w+?(,\s\w+)*)}\|({\w+?(,\s\w+)*}(,{\w+?(,\s\w+)*})*)},([01](\.\d+)?)/
     let sepCluster = {}
-    // let sepJ = {}
+    let sepJ = {}
     let attrNum = 0;
     require('fs').readFileSync(filePath).toString().split('\n').forEach( line => {
         let temp;
@@ -31,7 +31,7 @@ const checkValidity = (filePath) => {
 
         attrNum = temp[1]
         sepCluster[temp[2]] = temp[4]
-        // sepJ =
+        sepJ[temp[2]] = temp[8]
     })
-    return {validity: true, sepCluster, attrNum}
+    return {validity: true, sepCluster, sepJ, attrNum}
 }

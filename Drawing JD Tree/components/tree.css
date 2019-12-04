@@ -46,3 +46,12 @@ body {
 .activeCluster {
     font-style: italic;
 }
+
+.JMeasure {
+    color: darkgreen;
+    visibility: hidden;
+}
+
+.cluster .JMeasure {
+    visibility: visible;
+}

@@ -92,8 +92,10 @@ const generateNewGraph = (oldJD, config) => {
     let indexInConfig = getIndexInConfig(config, oldJD)
     if (indexInConfig > -1) {
         let node = config[indexInConfig]
+        let oldNode = node
         let nodeNameList = node.text.name.split(',\n')
-
+        let currJ = node.JMeasure
+        console.log(currJ)
         // change old cluster
         let originalCluName = node.text.name
         if (config === tree_config) {
@@ -104,6 +106,7 @@ const generateNewGraph = (oldJD, config) => {
         } else {
             node.text.name = oldJD.split(', ').sort().join(',\n')
             delete node.HTMLclass
+
         }
 
         if (typeof node.children !== typeof []) {
@@ -114,7 +117,7 @@ const generateNewGraph = (oldJD, config) => {
             // add sep
             let sepNode = {
                 text: {name: oldJDList.join(',\n')},
-                children: []
+                children: [],
             }
             node.children.push(sepNode)
             config.push(sepNode)
@@ -123,12 +126,23 @@ const generateNewGraph = (oldJD, config) => {
             node = sepNode
         }
 
+        console.log(typeof currJ)
+        let newNodeJMeasure = 0
         newClusters.forEach(element => {
             let cluNodeName = element.split(', ').filter(el => nodeNameList.includes(el))
             if (cluNodeName.length > 0) {
                 cluNodeName = cluNodeName.concat(oldJDList).sort().join(',\n')
+                let JMeasure =
+                    (Number(item.sepJ[oldJD]) + Number(currJ)).toFixed(4)
+                newNodeJMeasure += Number(item.sepJ[oldJD]) + Number(currJ)
+
                 let cluNode = {
+                    innerHTML: "<p class='JMeasure'>" +
+                        +JMeasure +
+                        "</p>" +
+                        "<p class='node-name'>" + cluNodeName + "</p>",
                     text: {name: cluNodeName},
+                    JMeasure: JMeasure,
                     children: [],
                     HTMLclass: 'cluster'
                 }
@@ -137,6 +151,12 @@ const generateNewGraph = (oldJD, config) => {
                 names.push(cluNodeName)
             }
         })
+        oldNode.JMeasure = newNodeJMeasure.toFixed(4)
+        if (oldNode.innerHTML !== undefined) {
+            let oldInnerHTML = oldNode.innerHTML.split('</p>')
+            oldInnerHTML[0] = "<p class='JMeasure'>" + oldNode.JMeasure
+            oldNode.innerHTML = oldInnerHTML.join("</p>")
+        }
     } else {
         console.log(oldJD)
         console.log('cannot find in config')
@@ -243,28 +263,23 @@ const toggleWordToPrefix = function (oldText, dict) {
 // jquery functions
 jQuery.fn.changeWordToPrefix = function () {
     let o = $(this[0])
-    o.text(function (i, oldText) {
-        let oldList = oldText.split(RIGHT_ARROW)
-        let oldShortedCluList = []
-        oldList[1].substring(1, oldList[1].length - 1).split('} | {').forEach(cluster => {
-            oldShortedCluList.push('{' + toggleWordToPrefix(cluster, wordToPrefix) + '}')
-        })
-        return toggleWordToPrefix(oldList[0], wordToPrefix) + RIGHT_ARROW + oldShortedCluList.join(' | ')
-    });
+    o.text((i, oldText) => jQueryChangeWordPrefixHelper(i, oldText, wordToPrefix));
     return this
 }
 
 jQuery.fn.changePrefixToWord = function () {
     let o = $(this[0])
-    o.text(function (i, oldText) {
-        let oldList = oldText.split(RIGHT_ARROW)
-        let oldShortedCluList = []
-        oldList[1].substring(1, oldList[1].length - 1).split('} | {').forEach(cluster => {
-            oldShortedCluList.push('{' + toggleWordToPrefix(cluster, prefixToWord) + '}')
-        })
-        return toggleWordToPrefix(oldList[0], prefixToWord) + RIGHT_ARROW + oldShortedCluList.join(' | ')
-    });
+    o.text((i, oldText) => jQueryChangeWordPrefixHelper(i, oldText, prefixToWord));
     return this
+}
+
+const jQueryChangeWordPrefixHelper = function (i, oldText, dict) {
+    let oldList = oldText.split(RIGHT_ARROW)
+    let oldShortedCluList = []
+    oldList[1].substring(1, oldList[1].length - 1).split('} | {').forEach(cluster => {
+        oldShortedCluList.push('{' + toggleWordToPrefix(cluster, dict) + '}')
+    })
+    return toggleWordToPrefix(oldList[0], dict) + RIGHT_ARROW + oldShortedCluList.join(' | ')
 }
 
 const hoverAction = function () {
@@ -276,7 +291,8 @@ const hoverAction = function () {
         $li.filter((index) => {
             let curr = $li.eq(index)
             let boo = !filterListForCluster(curr.attr('class') === 'active' ?
-                curr.text() : toggleWordToPrefix(curr.text(), prefixToWord), $(this).text())
+                curr.text().split(RIGHT_ARROW)[0] :
+                toggleWordToPrefix(curr.text().split(RIGHT_ARROW)[0], prefixToWord), $(this).find('.node-name').text())
             if (boo && curr.is(':visible')) IDs.push(index)
             return boo
         }).hide()

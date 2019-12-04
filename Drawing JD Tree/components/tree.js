@@ -31,12 +31,27 @@ const drawInit = (item) => {
         element.split(', ').forEach(element => set.add(element))
     )
     initList = Array.from(set)
+    let cluNodeName = initList.join(',\n')
     let parent_node = {
-        text: {name: initList.join(',\n')},
-        HTMLclass: 'cluster'
+        innerHTML: "<p class='JMeasure'>" +
+            +0 +
+            "</p>" +
+            "<p class='node-name'>" + cluNodeName + "</p>",
+        text: {name: cluNodeName},
+        HTMLclass: 'cluster',
+        JMeasure: 0,
+    }
+    let parent_node1 = {
+        innerHTML: "<p class='JMeasure'>" +
+            +0 +
+            "</p>" +
+            "<p class='node-name'>" + cluNodeName + "</p>",
+        text: {name: cluNodeName},
+        HTMLclass: 'cluster',
+        JMeasure: 0,
     }
     plan_config.push(parent_node)
-    tree_config.push(JSON.parse(JSON.stringify(parent_node)))
+    tree_config.push(parent_node1)
     names.push(parent_node.text.name)
 
     // init as plan configuration
