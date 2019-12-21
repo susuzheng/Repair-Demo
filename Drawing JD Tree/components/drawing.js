@@ -1,25 +1,30 @@
 const {ipcRenderer} = require('electron')
 
-let item
+let item, lr, numberOfCells
 // first contains second
-let ArrayContainChecker = (currList, cluList) => cluList.every(v => currList.includes(v))
 const prefixToWord = {};
 const wordToPrefix = {};
+const sepNodeMap = {};
+const sepParentMap = {};
 const RIGHT_ARROW = ' → ';
+const CLUSTER_SEP = ', ';
+const listOfAllSeps = [];
 
+$.get("http://localhost:9876/api/spurioustuples/db", function (res) {
+    numberOfCells = Number(res.numCells)
+})
 
 ipcRenderer.send('get-item')
 
-ipcRenderer.on('send-item', (e, item1) => {
+ipcRenderer.on('send-item', (e, item1, lr1) => {
     item = item1
+    lr = lr1
     drawInit(item)
-    // drawList(item)
     getPrefixToWord()
     getWordToPrefix()
     $(function () {
         let list = Object.keys(item.sepCluster).sort()
-        let $divList = $("div.list")
-        $divList.html("<ul></ul>");
+        $("div.list").html("<ul></ul>");
 
         // init sep selection list
         list.forEach(element => {
@@ -51,37 +56,13 @@ ipcRenderer.on('send-item', (e, item1) => {
             $(this).toggleClass("active");
         });
 
-        // update when double clicking
+        // update list when double clicking on a list element
         $li.on('dblclick', function () {
-            let text = $(this).text().split(RIGHT_ARROW)[0]
-            generateNewGraph(text, tree_config)
-            generateNewGraph(text, plan_config)
-            chart.destroy()
-            chart = new Treant(chart_config)
-            $li.filter((index) => {
-                let temp = $li.eq(index).text().split(RIGHT_ARROW)[0]
-                temp = toggleWordToPrefix(temp, prefixToWord)
-                return !filterList(temp) || notValidSepHere(temp)
-            }).hide()
-
-            $li.is(':hidden', (index, element) => {
-                let list = element.split()
-                let sepList = list[0].split(', ')
-                let cluText = list[1]
-                let newCluList = []
-                cluText.substring(1, cluText.length - 1).split('},{').forEach(cluster => {
-                    let filteredCluText = cluster.split(', ').filter(el => sepList.includes(el)).join(', ')
-                    if (filteredCluText.length > 0) {
-                        newCluList.push('{' + filteredCluText + '}')
-                    }
-                })
-                $(this).text(list[0] + RIGHT_ARROW + newCluList)
-            })
-            $divList = $("div.list")
-
-            // hover
-            hoverAction()
+            dblclickListUpdate($li, $(this))
         });
+
+        hoverAction()
+        mergeAction()
     })
 })
 
@@ -93,45 +74,46 @@ const generateNewGraph = (oldJD, config) => {
     if (indexInConfig > -1) {
         let node = config[indexInConfig]
         let oldNode = node
-        let nodeNameList = node.text.name.split(',\n')
+        let nodeNameList = node.text.name.split(CLUSTER_SEP)
         let currJ = node.JMeasure
-        console.log(currJ)
         // change old cluster
         let originalCluName = node.text.name
-        if (config === tree_config) {
+
+        newClusters.filter(clu => ArrayContainChecker(nodeNameList, clu.split(', ')))
+        if (isTreeConfig(config)) {
             let firstClu = newClusters.shift()
-            node.text.name = originalCluName.split(',\n')
-                .filter(attr => firstClu.includes(attr)).concat(oldJDList).sort().join(',\n')
+            node.text.name = originalCluName.split(CLUSTER_SEP)
+                .filter(attr => firstClu.includes(attr)).concat(oldJDList).sort().join(CLUSTER_SEP)
             names[names.indexOf(originalCluName)] = node.text.name
         } else {
-            node.text.name = oldJD.split(', ').sort().join(',\n')
-            delete node.HTMLclass
-
+            node.text.name = oldJD.split(', ').sort().join(CLUSTER_SEP)
+            node.HTMLclass = 'separator'
+            sepNodeMap[node.text.name] = node
         }
 
         if (typeof node.children !== typeof []) {
             node.children = []
         }
 
-        if (config === tree_config) {
+        if (isTreeConfig(config)) {
             // add sep
             let sepNode = {
-                text: {name: oldJDList.join(',\n')},
+                text: {name: oldJDList.join(CLUSTER_SEP)},
                 children: [],
+                HTMLclass: 'separator'
             }
             node.children.push(sepNode)
             config.push(sepNode)
             names.splice(names.indexOf(originalCluName))
-            oldJDList.forEach(attr => seps.push(attr))
             node = sepNode
+            sepParentMap[node.text.name] = oldNode
         }
 
-        console.log(typeof currJ)
         let newNodeJMeasure = 0
         newClusters.forEach(element => {
             let cluNodeName = element.split(', ').filter(el => nodeNameList.includes(el))
             if (cluNodeName.length > 0) {
-                cluNodeName = cluNodeName.concat(oldJDList).sort().join(',\n')
+                cluNodeName = cluNodeName.concat(oldJDList).sort().join(CLUSTER_SEP)
                 let JMeasure =
                     (Number(item.sepJ[oldJD]) + Number(currJ)).toFixed(4)
                 newNodeJMeasure += Number(item.sepJ[oldJD]) + Number(currJ)
@@ -155,6 +137,7 @@ const generateNewGraph = (oldJD, config) => {
         if (oldNode.innerHTML !== undefined) {
             let oldInnerHTML = oldNode.innerHTML.split('</p>')
             oldInnerHTML[0] = "<p class='JMeasure'>" + oldNode.JMeasure
+            oldInnerHTML[1] = "<p class='node-name'>" + oldNode.text.name
             oldNode.innerHTML = oldInnerHTML.join("</p>")
         }
     } else {
@@ -163,19 +146,29 @@ const generateNewGraph = (oldJD, config) => {
     }
 }
 
+
+// -------------- Helpers --------------
+
 // check if the given oldJD can separate sth. out
 const notValidSepHere = (oldJD) => {
     let newClustersString = item.sepCluster[oldJD]
     let newClusters = newClustersString.substring(1, newClustersString.length - 1).split('},{') //array
     let nodeNameList = names.filter(name =>
-        ArrayContainChecker(name.split(',\n'), oldJD.split(', '))
+        ArrayContainChecker(name.split(CLUSTER_SEP), oldJD.split(', '))
     )
     let boo = false
+    // list of all candidate names
     nodeNameList.forEach(name => {
-        let nameList = name.split(',\n')
+        let nameAttrList = name.split(CLUSTER_SEP)
+        // let existedSepAttrSet = new Set()
         let count = 0
+        // let node = getClusterByName(name)
+        // node.children.forEach(sep => {
+        //     sep.text.name.split(', ').forEach(attr => existedSepAttrSet.add(attr))
+        // })
+
         newClusters.forEach(element => {
-            if (element.split(', ').filter(el => nameList.includes(el)).length > 0) {
+            if (element.split(', ').filter(el => nameAttrList.includes(el)).length > 0) {
                 count++
             }
         })
@@ -233,19 +226,19 @@ const getWordToPrefix = () => {
 // check if any cluster contain the certain JD
 const filterList = (JD) => {
     JD = JD.split(', ')
-    return names.some(name => ArrayContainChecker(name.split(',\n'), JD))
+    return names.some(name => ArrayContainChecker(name.split(CLUSTER_SEP), JD))
 }
 
 const filterListForCluster = (JD, cluster) => {
     JD = JD.split(', ')
-    let clusterArray = cluster.split(',\n')
+    let clusterArray = cluster.split(CLUSTER_SEP)
     return ArrayContainChecker(clusterArray, JD)
 }
 
 const getIndexInConfig = (config, oldJD) => {
     let cluList = oldJD.split(', ')
     for (let i = 1; i < config.length; i++) {
-        if (config[i].HTMLclass === 'cluster' && ArrayContainChecker(config[i].text.name.split(',\n'), cluList)) {
+        if (config[i].HTMLclass === 'cluster' && ArrayContainChecker(config[i].text.name.split(CLUSTER_SEP), cluList)) {
             return i
         }
     }
@@ -260,6 +253,10 @@ const toggleWordToPrefix = function (oldText, dict) {
     return shortedList.join(', ')
 }
 
+const ArrayContainChecker = (currList, cluList) => cluList.every(v => currList.includes(v))
+
+const isTreeConfig = config => config === tree_config
+
 // jquery functions
 jQuery.fn.changeWordToPrefix = function () {
     let o = $(this[0])
@@ -271,6 +268,17 @@ jQuery.fn.changePrefixToWord = function () {
     let o = $(this[0])
     o.text((i, oldText) => jQueryChangeWordPrefixHelper(i, oldText, prefixToWord));
     return this
+}
+
+const dblclickListUpdate = function ($li, $this) {
+    $('p#SpuriousTuples, p#saving').css('color', 'red')
+    let text = $this.text().split(RIGHT_ARROW)[0]
+    listOfAllSeps.push(text)
+    generateGraphWithSepList(isTreeConfig(chart_config))
+
+    // hover
+    hoverAction()
+    mergeAction()
 }
 
 const jQueryChangeWordPrefixHelper = function (i, oldText, dict) {
@@ -304,4 +312,93 @@ const hoverAction = function () {
             $(this).removeClass('activeCluster')
         })
     })
+}
+
+const mergeAction = function () {
+    $("div.separator").on('dblclick', function () {
+        $('li').show()
+        let text = $(this).children('.node-name').text()
+        console.log(listOfAllSeps)
+        let index = listOfAllSeps.indexOf(text)
+        listOfAllSeps.splice(index, 1)
+        console.log(listOfAllSeps)
+        generateGraphWithSepList(isTreeConfig(chart_config))
+
+        hoverAction()
+        mergeAction()
+    })
+}
+
+const generateGraphWithSepList = function (isTree) {
+    drawInit(item)
+    listOfAllSeps.forEach(text => {
+        generateNewGraph(text, tree_config)
+        generateNewGraph(text, plan_config)
+
+        let $li = $('li')
+        // filter the whole list
+        $li.filter((index) => {
+            let temp = $li.eq(index).text().split(RIGHT_ARROW)[0]
+            temp = toggleWordToPrefix(temp, prefixToWord)
+            return !filterList(temp) || notValidSepHere(temp)
+        }).hide()
+    })
+    chart.destroy()
+    chart_config = isTree ? tree_config : plan_config
+    chart = new Treant(chart_config)
+    calculateData()
+}
+
+const calculateData = function () {
+    let listOfListOfNames = []
+
+    let UniqueNameList = $('div.cluster').children('.node-name')
+    UniqueNameList.each(function () {
+        listOfListOfNames.push(JSON.parse('[' + $(this).text() + ']'))
+    })
+    console.log(listOfListOfNames)
+    let myAction = {};
+    let url = "http://localhost:9876/api/spurioustuples/decomasync"
+    $.extend(myAction, {
+        test: function () {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                dataType: 'json',
+                data: JSON.stringify(listOfListOfNames),
+                cache: false,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                success: function (res) {
+                    if (res.status === 'PENDING' || res.status === 'RUNNING') {
+                        setTimeout(myAction.test, 50)
+                        console.log('PENDING')
+                    } else if (res.status === 'FINISHED') {
+                        console.log(res)
+                        $('p#SpuriousTuples').text(res.dInfo.spuriousTuples)
+                        let savingPercentage = ((1 - Number(res.dInfo.totalCellsInDecomposition) / numberOfCells) * 100)
+                            .toFixed(1)
+                        $('p#saving').text(savingPercentage + '%')
+                        $('p#SpuriousTuples, p#saving').css('color', 'green')
+                    } else {
+                        console.log(res.status)
+                    }
+                },
+                error: function (e) {
+                    console.log(e)
+                }
+            });
+        }
+    })
+    myAction.test()
+}
+
+const getClusterByName = function (text) {
+    for (let i = 1; i < tree_config.length; i++) {
+        if (tree_config[i].text.name === text) {
+            return tree_config[i]
+        }
+    }
+    return null
 }

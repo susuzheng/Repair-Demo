@@ -27,18 +27,35 @@
 
 
 <div class='container' id='right'>
+    <div id='info'>
+        <div id='E'>
+            <p>Spurious Tuples: </p>
+            <p id='SpuriousTuples'></p>
+        </div>
+        <div id='S'>
+            <p>Saving in Storage: </p>
+            <p id='saving'></p>
+        </div>
+        <!--        <div id='J'>-->
+        <!--            <p>J-Measure: </p>-->
+        <!--            <p id='JMeasure'></p>-->
+        <!--        </div>-->
+    </div>
     <div id='tree'></div>
     <div id='buttons'>
-        <button id='change_layout' onclick="
+        <button id='change_layout' onclick='
             chart.destroy()
             chart_config = chart_config === tree_config ? plan_config : tree_config
             chart = new Treant(chart_config)
             hoverAction()
-        ">change the layout</button>
+            mergeAction()
+        '>change the layout
+        </button>
         <button id='refresh' onclick="
             chart.destroy();
             chart = new Treant(chart_config)
             hoverAction()
+            mergeAction()
         ">refresh
         </button>
     </div>

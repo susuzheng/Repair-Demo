@@ -24,8 +24,8 @@ body {
     display: inline-block;
     height: auto;
     overflow: hidden;
-    /*white-space: nowrap;*/
-    white-space: pre-line;
+    white-space: nowrap;
+    /*white-space: pre-line;*/
 }
 
 .node p {
@@ -49,9 +49,9 @@ body {
 
 .JMeasure {
     color: darkgreen;
-    visibility: hidden;
+    display: none;
 }
 
 .cluster .JMeasure {
-    visibility: visible;
+    display: block;
 }

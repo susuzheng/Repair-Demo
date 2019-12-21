@@ -18,20 +18,22 @@
 //
 // let chart_config = [config, parent_node, first_child, second_child]
 let config = {
-        container: "#tree",
-        // rootOrientation: 'WEST'
-    },
-    chart_config = [], tree_config = [config], plan_config = [config],
-    names = [], seps = [], initList;
+    container: "#tree",
+    // rootOrientation: 'WEST'
+}, chart_config, tree_config, plan_config, names, initList;
 
 const drawInit = (item) => {
+    tree_config = [config]
+    plan_config = [config]
+    names = []
+
     let set = new Set()
     let keyArray = Object.keys(item.sepCluster)
     keyArray.forEach(element =>
         element.split(', ').forEach(element => set.add(element))
     )
     initList = Array.from(set)
-    let cluNodeName = initList.join(',\n')
+    let cluNodeName = initList.join(', ')
     let parent_node = {
         innerHTML: "<p class='JMeasure'>" +
             +0 +
@@ -41,6 +43,8 @@ const drawInit = (item) => {
         HTMLclass: 'cluster',
         JMeasure: 0,
     }
+    plan_config.push(parent_node)
+
     let parent_node1 = {
         innerHTML: "<p class='JMeasure'>" +
             +0 +
@@ -50,8 +54,8 @@ const drawInit = (item) => {
         HTMLclass: 'cluster',
         JMeasure: 0,
     }
-    plan_config.push(parent_node)
     tree_config.push(parent_node1)
+
     names.push(parent_node.text.name)
 
     // init as plan configuration

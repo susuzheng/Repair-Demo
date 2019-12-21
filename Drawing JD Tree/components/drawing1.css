@@ -5,6 +5,7 @@ body {
     font-family: sans-serif;
     margin: 0;
 }
+
 body {
     display: flex;
 }
@@ -18,12 +19,16 @@ div.container {
     overflow: scroll;
 }
 
-div#right {
-    width: 80%;
+div#info {
+    position: fixed;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    flex-direction: column;
 }
 
-button {
-    /*display: inline-block;*/
+div#right {
+    width: 80%;
 }
 
 div#tree {
@@ -32,7 +37,6 @@ div#tree {
 
 div.list {
     text-align: center;
-
 }
 
 .list ul {

@@ -1,4 +1,6 @@
 const {ipcRenderer} = require('electron')
+const {exec} = require('child_process')
+let net = require('net')
 
 let upload = document.getElementById('upload')
 
@@ -9,7 +11,12 @@ upload.addEventListener('click', e => {
 ipcRenderer.on('set-filepath-success', (e, file) => {
     let item;
     if ((item = checkValidity(file)).validity) {
-        console.log('aaa')
+        // exec('cd ../SpuriousTuplesWebApp && bash runTestServer.sh', (err) => {
+        //     if (err) {
+        //         //some err occurred
+        //         console.error(err)
+        //     }
+        // });
         ipcRenderer.send('open-drawing', item)
     } else {
         alert('Not valid separator file. Please select again.')
@@ -35,3 +42,19 @@ const checkValidity = (filePath) => {
     })
     return {validity: true, sepCluster, sepJ, attrNum}
 }
+
+const portInUse = function (port) {
+    let server = net.createServer(function (socket) {
+        socket.write('Echo server\r\n');
+        socket.pipe(socket);
+    });
+
+    server.listen(port, '127.0.0.1');
+    server.on('error', function (e) {
+        return true;
+    });
+    server.on('listening', function (e) {
+        server.close();
+        return false;
+    });
+};
