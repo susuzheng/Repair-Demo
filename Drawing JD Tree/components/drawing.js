@@ -358,7 +358,7 @@ const calculateData = function () {
     })
     console.log(listOfListOfNames)
     let myAction = {};
-    let url = "http://localhost:9876/api/spurioustuples/decomasync"
+    let url = "http://localhost:9876/api/spurioustuples/decom"
     $.extend(myAction, {
         test: function () {
             $.ajax({
@@ -371,19 +371,19 @@ const calculateData = function () {
                     'Content-Type': 'application/json'
                 },
                 success: function (res) {
-                    if (res.status === 'PENDING' || res.status === 'RUNNING') {
-                        setTimeout(myAction.test, 50)
-                        console.log('PENDING')
-                    } else if (res.status === 'FINISHED') {
+                    // if (res.status === 'PENDING' || res.status === 'RUNNING') {
+                    //     setTimeout(myAction.test, 50)
+                    //     console.log('PENDING')
+                    // } else if (res.status === 'FINISHED') {
                         console.log(res)
-                        $('p#SpuriousTuples').text(res.dInfo.spuriousTuples)
-                        let savingPercentage = ((1 - Number(res.dInfo.totalCellsInDecomposition) / numberOfCells) * 100)
+                        $('p#SpuriousTuples').text(res.spuriousTuples)
+                        let savingPercentage = ((1 - Number(res.totalCellsInDecomposition) / numberOfCells) * 100)
                             .toFixed(1)
                         $('p#saving').text(savingPercentage + '%')
                         $('p#SpuriousTuples, p#saving').css('color', 'green')
-                    } else {
-                        console.log(res.status)
-                    }
+                    // } else {
+                    //     console.log(res.status)
+                    // }
                 },
                 error: function (e) {
                     console.log(e)

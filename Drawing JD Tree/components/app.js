@@ -42,19 +42,3 @@ const checkValidity = (filePath) => {
     })
     return {validity: true, sepCluster, sepJ, attrNum}
 }
-
-const portInUse = function (port) {
-    let server = net.createServer(function (socket) {
-        socket.write('Echo server\r\n');
-        socket.pipe(socket);
-    });
-
-    server.listen(port, '127.0.0.1');
-    server.on('error', function (e) {
-        return true;
-    });
-    server.on('listening', function (e) {
-        server.close();
-        return false;
-    });
-};
