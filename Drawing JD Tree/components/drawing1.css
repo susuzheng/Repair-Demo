@@ -54,3 +54,7 @@ ul li {
 li.active {
     background-color: lightskyblue;
 }
+
+p#SpuriousTuples, p#saving, p#JMeasure {
+    color: green;
+}

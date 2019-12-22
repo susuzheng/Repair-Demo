@@ -28,18 +28,21 @@ const drawInit = (item) => {
     names = []
 
     let set = new Set()
-    let keyArray = Object.keys(item.sepCluster)
+    let keyArray = item.allSepList
     keyArray.forEach(element =>
-        element.split(', ').forEach(element => set.add(element))
-    )
-    initList = Array.from(set)
+        element.split(', ').forEach(element => {
+            if (element !== '') {
+                set.add(element)
+            }
+        }))
+    initList = Array.from(set).sort()
     let cluNodeName = initList.join(', ')
     let parent_node = {
         innerHTML: "<p class='JMeasure'>" +
             +0 +
             "</p>" +
             "<p class='node-name'>" + cluNodeName + "</p>",
-        text: {name: cluNodeName},
+        text: {name: initList.slice()},
         HTMLclass: 'cluster',
         JMeasure: 0,
     }
@@ -50,7 +53,7 @@ const drawInit = (item) => {
             +0 +
             "</p>" +
             "<p class='node-name'>" + cluNodeName + "</p>",
-        text: {name: cluNodeName},
+        text: {name: initList.slice()},
         HTMLclass: 'cluster',
         JMeasure: 0,
     }
