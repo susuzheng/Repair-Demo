@@ -35,7 +35,7 @@ const drawInit = (item) => {
                 set.add(element)
             }
         }))
-    initList = Array.from(set).sort()
+    initList = [...Array(Number(item.attrNum)).keys()].map(x => x.toString())
     let cluNodeName = initList.join(', ')
     let parent_node = {
         innerHTML: "<p class='JMeasure'>" +

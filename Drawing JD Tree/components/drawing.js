@@ -7,7 +7,7 @@ const wordToPrefix = {};
 const sepNodeMap = {};
 const sepParentMap = {};
 const RIGHT_ARROW = ' → ';
-const CLUSTER_SEP = ', ';
+const CLUSTER_SEP = ',';
 const listOfUsedSepIndex = [];
 const listOfUsedSep = [];
 
@@ -82,12 +82,12 @@ const generateNewGraph = (oldJD, index, config) => {
 
         if (isTreeConfig(config)) {
             let firstClu = newClusters.shift()
-            node.text.name = originalCluName
-                .filter(attr => firstClu.includes(attr))
+            node.text.name = originalCluName.filter(attr => firstClu.includes(attr))
             if (oldJD !== '') {
-                node.text.name = node.text.name.concat(oldJDList)
+                node.text.name = Array.from(new Set(node.text.name.concat(oldJDList)))
             }
-            node.text.name = node.text.name.sort()
+            node.text.name = node.text.name.sort((a, b) => (Number(a) - Number(b)))
+
         } else {
             node.text.name = oldJD.split(', ').sort().join(CLUSTER_SEP)
             node.HTMLclass = 'separator'
@@ -118,7 +118,7 @@ const generateNewGraph = (oldJD, index, config) => {
                 if (oldJD !== '') {
                     cluNodeName = cluNodeName.concat(oldJDList)
                 }
-                cluNodeName.sort().join(CLUSTER_SEP)
+                cluNodeName.sort((a, b) => Number(a) - Number(b)).join(CLUSTER_SEP)
                 let JMeasure =
                     (Number(item.sepJ[index]) + Number(currJ)).toFixed(4)
                 // newNodeJMeasure += Number(item.sepJ[oldJD]) + Number(currJ)
@@ -352,7 +352,7 @@ const calculateData = function () {
     let UniqueNameList = $('div.cluster').children('.node-name')
     UniqueNameList.each(function () {
         listOfListOfNames.push(JSON.parse('[' + $(this).text() + ']'))
-        names.push($(this).text())
+        names.push($(this).text().split(CLUSTER_SEP))
     })
 
     // filter the whole list
