@@ -1,0 +1,21 @@
+Start Stage:
+The demo starts by requiring a separator file. The demo processes and examines the validity of the file at the same time using regex and ‘fs’ package. If the file passes the test, the demo loads the main page, with a list of possible separators on the left and current diagram on the right.
+
+Candidate list:
+The list shows only the distinguishable prefix of each attribute at first for conciseness. When you click on one separator, it expands to show the full names. Also, the demo constructs a Trie for getting unique prefixes.
+
+Drawing Diagram:
+The diagram is generated from an array of selected separators. The program goes through and applies each separator, one at a time, leaving only attributes that make sense at their position in the shown clusters (i.e. attributes contained in the previous cluster from which new clusters are separated out.)
+
+To add or delete separators to the array, you have to double click a separator in the candidate list to add or a separator in the diagram to delete. After making a change to the separator list, the demo reconstructs the whole diagram.
+
+Filtering:
+When you double click a separator either in the list (select) or on the diagram (merge), the demo, in the meantime of generating the new diagram, filters the separator list to show only feasible separators for the new stage of the tree. Hovering over a cluster works in a similar pattern but is designated for filtering for only the specified cluster and will not update the diagram.
+
+The implementation for filtering contains two parts: For each separator in the list, 1) the demo checks if any cluster contains all the attributes in the separator. If true, 2) it checks if more than 1 new clusters have attributes in the old cluster. If both true, the demo keeps the separator; otherwise, discard.
+
+Retrieving info:
+The demo communicates with the server by AJAX and updates the required info once the data is sent back. Note: The J-Measure shown on the right-upper corner is the largest J-Measure in all of the clusters.
+
+Misc.:
+The demo primarily uses Electron and Treant.JS, two JavaScript packages. The former is for the skeleton, and the latter one is for the diagram. All the selections are done with jQuery. For the current implementation, you have to manually start the server and then start the demo. The demo provides two forms of the tree: one join tree and one join plan. The demo is actually implemented with HTML, CSS, and JS, and you can open the DevTool like the one in the Chrome browser by ctrl+shift+I on Windows or cmd+option+I on Mac OS.
