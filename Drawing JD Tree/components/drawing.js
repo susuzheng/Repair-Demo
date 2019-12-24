@@ -11,6 +11,7 @@ const CLUSTER_SEP = ',';
 const listOfUsedSepIndex = [];
 const listOfUsedSep = [];
 
+// get basic info about the dataset
 $.get("http://localhost:9876/api/spurioustuples/db", function (res) {
     numberOfCells = Number(res.numCells)
     numberOfTuples = Number(res.numTuples)
@@ -40,6 +41,7 @@ ipcRenderer.on('send-item', (e, item1) => {
 
         let $li = $("li")
 
+        // click elsewhere
         $(document).on("click", function (e) {
             if (e.target === document || e.target.tagName === "BODY" || e.target.tagName === "HTML" || e.target.tagName === "DIV") {
                 let $active = $(".active")
@@ -48,7 +50,7 @@ ipcRenderer.on('send-item', (e, item1) => {
             }
         });
 
-
+        // click on a sep in the left list
         $li.on('click', function () {
             let $active = $(".active")
             $active.changeWordToPrefix()
@@ -62,32 +64,31 @@ ipcRenderer.on('send-item', (e, item1) => {
             dblclickListUpdate($li, $(this))
         });
 
-        hoverAction()
+        // hoverAction()
         mergeAction()
     })
 })
 
 const generateNewGraph = (oldJD, index, config) => {
     let newClustersString = item.sepCluster[index]
-    let oldJDList = oldJD.split(', ').sort()
-    let newClusters = newClustersString.substring(1, newClustersString.length - 1).split('},{') //array
+    let listOfOldJD = oldJD.split(', ').sort()
+    let listOfNewClusters = newClustersString.substring(1, newClustersString.length - 1).split('},{') //array
     let indexInConfig = getIndexInConfig(config, oldJD)
     if (indexInConfig > -1 || oldJD === '') {
         let node = config[oldJD === '' ? 1 : indexInConfig]
         let oldNode = node
-        let nodeNameList = node.text.name
+        let listOfNodeName = node.text.name
         let currJ = node.JMeasure
         // change old cluster
         let originalCluName = node.text.name
 
         if (isTreeConfig(config)) {
-            let firstClu = newClusters.shift()
+            let firstClu = listOfNewClusters.shift()
             node.text.name = originalCluName.filter(attr => firstClu.includes(attr))
             if (oldJD !== '') {
-                node.text.name = Array.from(new Set(node.text.name.concat(oldJDList)))
+                node.text.name = Array.from(new Set(node.text.name.concat(listOfOldJD)))
             }
             node.text.name = node.text.name.sort((a, b) => (Number(a) - Number(b)))
-
         } else {
             node.text.name = oldJD.split(', ').sort().join(CLUSTER_SEP)
             node.HTMLclass = 'separator'
@@ -101,7 +102,7 @@ const generateNewGraph = (oldJD, index, config) => {
         if (isTreeConfig(config)) {
             // add sep
             let sepNode = {
-                text: {name: oldJDList.join(CLUSTER_SEP)},
+                text: {name: listOfOldJD.join(CLUSTER_SEP)},
                 children: [],
                 HTMLclass: 'separator'
             }
@@ -112,11 +113,11 @@ const generateNewGraph = (oldJD, index, config) => {
         }
 
         // let newNodeJMeasure = 0
-        newClusters.forEach(element => {
-            let cluNodeName = element.split(', ').filter(el => nodeNameList.includes(el))
+        listOfNewClusters.forEach(element => {
+            let cluNodeName = element.split(', ').filter(el => listOfNodeName.includes(el))
             if (cluNodeName.length > 0) {
                 if (oldJD !== '') {
-                    cluNodeName = cluNodeName.concat(oldJDList)
+                    cluNodeName = cluNodeName.concat(listOfOldJD)
                 }
                 cluNodeName.sort((a, b) => Number(a) - Number(b)).join(CLUSTER_SEP)
                 let JMeasure =
@@ -379,6 +380,7 @@ const calculateData = function () {
                 success: function (res) {
                     let SpurPercentage = ((Number(res.spuriousTuples) / numberOfTuples) * 100)
                         .toFixed(2)
+                    console.log(res.spuriousTuples)
                     $('p#SpuriousTuples').text(SpurPercentage + '%')
 
                     let savingPercentage = ((1 - Number(res.totalCellsInDecomposition) / numberOfCells) * 100)
@@ -400,13 +402,4 @@ const calculateData = function () {
         }
     })
     myAction.test()
-}
-
-const getClusterByName = function (text) {
-    for (let i = 1; i < tree_config.length; i++) {
-        if (tree_config[i].text.name === text) {
-            return tree_config[i]
-        }
-    }
-    return null
 }
