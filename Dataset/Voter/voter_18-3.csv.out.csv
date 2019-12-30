@@ -1,4 +1,0 @@
-"#Attribtues","#Rows",Range Size,Threshold,Timeout (sec),Completed MinSeps,"#Minimal Separators",Completed FullMVDs,"#Full MVDs",Time Building range Tbls,"#In-Memory Queries Issued",Query Time,total Running time,%querying,Cached Entropy Objects,Number of tuples processed during Entropy Computation
-18,10000,10,0.0,18000,true,34,true,0,152472,10331,66868,219724,30.432724690975952,10332,2477954
-18,10000,10,0.01,18000,true,31,true,0,158311,12753,91126,250190,36.42271873376234,12754,3121425
-18,10000,10,0.1,18000,true,26,true,0,165990,12709,102018,897574,11.365970939443432,12710,3860743
