@@ -89,7 +89,8 @@ const generateNewGraph = (oldJD, index, config) => {
         if (isTreeConfig(config)) {
             let indexOfFirstClu = (function () {
                 for (let i = 0; i < listOfNewClusters.length; i++) {
-                    if (node.sep.every(separator => ArrayContainChecker(listOfNewClusters[i].split(', '), separator.split(', ')))) {
+                    if (node.sep.every(separator =>
+                        ArrayContainChecker(listOfNewClusters[i].split(', ').concat(listOfOldJD), separator.split(', ')))) {
                         return i
                     }
                 }
@@ -173,6 +174,7 @@ const generateNewGraph = (oldJD, index, config) => {
 // check if the given oldJD can separate sth. out
 const notValidSepHere = (oldJD, index) => {
     let newClustersString = item.sepCluster[index]
+    let listOfOldJD = oldJD.split(', ')
     let newClusters = newClustersString.substring(1, newClustersString.length - 1).split('},{') //array
     let nodeNameList = names.filter(name =>
         ArrayContainChecker(name, oldJD.split(', '))
@@ -188,7 +190,7 @@ const notValidSepHere = (oldJD, index) => {
                 count++
             }
             if (tree_config[getIndexInConfig(tree_config, nameAttrList.join(', '))].sep.every(separator => {
-                return ArrayContainChecker(element.split(', '), separator.split(', '))
+                return ArrayContainChecker(element.split(', ').concat(listOfOldJD), separator.split(', '))
             })) {
                 containsAllSep = true
             }
