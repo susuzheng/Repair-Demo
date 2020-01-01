@@ -87,12 +87,22 @@ const generateNewGraph = (oldJD, index, config) => {
             return newClu.split(', ').some(attr => originalCluName.includes(attr))
         })
         if (isTreeConfig(config)) {
-            let firstClu = listOfNewClusters.shift().split(', ')
+            let indexOfFirstClu = (function () {
+                for (let i = 0; i < listOfNewClusters.length; i++) {
+                    if (node.sep.every(separator => ArrayContainChecker(listOfNewClusters[i].split(', '), separator.split(', ')))) {
+                        return i
+                    }
+                }
+                return -1
+            })()
+            let firstClu = listOfNewClusters[indexOfFirstClu].split(', ')
+            listOfNewClusters.splice(indexOfFirstClu, 1)
             node.text.name = firstClu.filter(attr => originalCluName.includes(attr))
             if (oldJD !== '') {
                 node.text.name = Array.from(new Set(node.text.name.concat(listOfOldJD)))
             }
             node.text.name = node.text.name.sort((a, b) => (Number(a) - Number(b)))
+            node.sep.push(oldJD)
         } else {
             node.text.name = oldJD.split(', ').sort().join(CLUSTER_SEP)
             node.HTMLclass = 'separator'
@@ -136,10 +146,12 @@ const generateNewGraph = (oldJD, index, config) => {
                     text: {name: cluNodeName},
                     JMeasure: JMeasure,
                     children: [],
-                    HTMLclass: 'cluster'
+                    HTMLclass: 'cluster',
+                    sep: []
                 }
                 node.children.push(cluNode)
                 config.push(cluNode)
+                cluNode.sep.push(oldJD)
             }
         })
         oldNode.JMeasure = (Number(item.sepJ[index]) + Number(currJ)).toFixed(4)
@@ -166,6 +178,7 @@ const notValidSepHere = (oldJD, index) => {
         ArrayContainChecker(name, oldJD.split(', '))
     )
     let boo = false
+    let containsAllSep = false
     // list of all candidate names
     nodeNameList.forEach(name => {
         let nameAttrList = name
@@ -174,13 +187,19 @@ const notValidSepHere = (oldJD, index) => {
             if (element.split(', ').filter(el => nameAttrList.includes(el)).length > 0) {
                 count++
             }
+            if (tree_config[getIndexInConfig(tree_config, nameAttrList.join(', '))].sep.every(separator => {
+                return ArrayContainChecker(element.split(', '), separator.split(', '))
+            })) {
+                containsAllSep = true
+            }
         })
+
         if (count <= 1) {
             boo = true
         }
     })
 
-    return boo
+    return boo || !containsAllSep
 }
 
 // convert a list to an object mapping distinguishable prefixes to words
@@ -365,9 +384,6 @@ const calculateData = function () {
             cache: false,
             headers: {
                 'Content-Type': 'application/json'
-            },
-            success: function (res) {
-                console.log(res)
             }
         })
         calculateData.listOfListOfNames = []
@@ -381,7 +397,6 @@ const calculateData = function () {
         names.push($(this).text().split(CLUSTER_SEP))
     })
 
-    console.log(names)
     // filter the whole list
     let $li = $('li')
     if (names.length > 1) {
@@ -408,7 +423,6 @@ const calculateData = function () {
                 success: function (res) {
                     let SpurPercentage = ((Number(res.spuriousTuples) / numberOfTuples) * 100)
                         .toFixed(2)
-                    console.log(res.spuriousTuples)
                     $('p#SpuriousTuples').text(SpurPercentage + '%')
 
                     let savingPercentage = ((1 - Number(res.totalCellsInDecomposition) / numberOfCells) * 100)

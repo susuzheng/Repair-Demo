@@ -45,6 +45,7 @@ const drawInit = (item) => {
         text: {name: initList.slice()},
         HTMLclass: 'cluster',
         JMeasure: 0,
+        sep: []
     }
     plan_config.push(parent_node)
 
@@ -56,6 +57,7 @@ const drawInit = (item) => {
         text: {name: initList.slice()},
         HTMLclass: 'cluster',
         JMeasure: 0,
+        sep: []
     }
     tree_config.push(parent_node1)
 
