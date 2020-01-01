@@ -1,6 +1,6 @@
 const {ipcRenderer} = require('electron')
 
-let item, lr, numberOfCells, numberOfTuples
+let item, numberOfCells, numberOfTuples
 // first contains second
 const prefixToWord = {};
 const wordToPrefix = {};
@@ -64,7 +64,7 @@ ipcRenderer.on('send-item', (e, item1) => {
             dblclickListUpdate($li, $(this))
         });
 
-        // hoverAction()
+        hoverAction()
         mergeAction()
     })
 })
@@ -74,17 +74,21 @@ const generateNewGraph = (oldJD, index, config) => {
     let listOfOldJD = oldJD.split(', ').sort()
     let listOfNewClusters = newClustersString.substring(1, newClustersString.length - 1).split('},{') //array
     let indexInConfig = getIndexInConfig(config, oldJD)
+
     if (indexInConfig > -1 || oldJD === '') {
         let node = config[oldJD === '' ? 1 : indexInConfig]
         let oldNode = node
         let listOfNodeName = node.text.name
         let currJ = node.JMeasure
-        // change old cluster
         let originalCluName = node.text.name
 
+        // change old cluster
+        listOfNewClusters = listOfNewClusters.filter(newClu => {
+            return newClu.split(', ').some(attr => originalCluName.includes(attr))
+        })
         if (isTreeConfig(config)) {
-            let firstClu = listOfNewClusters.shift()
-            node.text.name = originalCluName.filter(attr => firstClu.includes(attr))
+            let firstClu = listOfNewClusters.shift().split(', ')
+            node.text.name = firstClu.filter(attr => originalCluName.includes(attr))
             if (oldJD !== '') {
                 node.text.name = Array.from(new Set(node.text.name.concat(listOfOldJD)))
             }
@@ -276,7 +280,6 @@ jQuery.fn.max = function (selector) {
 }
 
 const dblclickListUpdate = function ($li, $this) {
-    $('p#SpuriousTuples, p#saving, p#JMeasure').css('color', 'red')
     listOfUsedSepIndex.push($li.index($this))
     listOfUsedSep.push($this.text().split(RIGHT_ARROW)[0])
 
@@ -302,14 +305,16 @@ const hoverAction = function () {
     $cluster.on('mouseenter', function () {
         let IDs = []
         $(this).addClass('activeCluster')
-        $li.filter((index) => {
-            let curr = $li.eq(index)
-            let boo = !filterListForCluster(curr.attr('class') === 'active' ?
-                curr.text().split(RIGHT_ARROW)[0] :
-                toggleWordToPrefix(curr.text().split(RIGHT_ARROW)[0], prefixToWord), $(this).find('.node-name').text())
-            if (boo && curr.is(':visible')) IDs.push(index)
-            return boo
-        }).hide()
+        if (names.length > 1) {
+            $li.filter((index) => {
+                let curr = $li.eq(index)
+                let boo = !filterListForCluster(curr.attr('class') === 'active' ?
+                    curr.text().split(RIGHT_ARROW)[0] :
+                    toggleWordToPrefix(curr.text().split(RIGHT_ARROW)[0], prefixToWord), $(this).find('.node-name').text())
+                if (boo && curr.is(':visible')) IDs.push(index)
+                return boo
+            }).hide()
+        }
 
         $cluster.on('mouseleave', () => {
             IDs.forEach((value) => {
@@ -347,32 +352,55 @@ const generateGraphWithSepList = function (isTree) {
 }
 
 const calculateData = function () {
-    let listOfListOfNames = []
+    if (typeof calculateData.listOfListOfNames === 'undefined') {
+        calculateData.listOfListOfNames = []
+    }
+    if (calculateData.listOfListOfNames.length !== 0) {
+        calculateData.ajax.abort();
+        $.ajax({
+            url: "http://localhost:9876/api/spurioustuples/cancel",
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify(calculateData.listOfListOfNames),
+            cache: false,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            success: function (res) {
+                console.log(res)
+            }
+        })
+        calculateData.listOfListOfNames = []
+    }
+    $('p#SpuriousTuples, p#saving, p#JMeasure').css('color', 'red')
     names = []
 
     let UniqueNameList = $('div.cluster').children('.node-name')
     UniqueNameList.each(function () {
-        listOfListOfNames.push(JSON.parse('[' + $(this).text() + ']'))
+        calculateData.listOfListOfNames.push(JSON.parse('[' + $(this).text() + ']'))
         names.push($(this).text().split(CLUSTER_SEP))
     })
 
+    console.log(names)
     // filter the whole list
     let $li = $('li')
-    $li.filter((index) => {
-        let temp = $li.eq(index).text().split(RIGHT_ARROW)[0]
-        temp = toggleWordToPrefix(temp, prefixToWord)
-        return !filterList(temp) || notValidSepHere(temp, index)
-    }).hide()
+    if (names.length > 1) {
+        $li.filter((index) => {
+            let temp = $li.eq(index).text().split(RIGHT_ARROW)[0]
+            temp = toggleWordToPrefix(temp, prefixToWord)
+            return !filterList(temp) || notValidSepHere(temp, index)
+        }).hide()
+    }
 
     let myAction = {};
     let url = "http://localhost:9876/api/spurioustuples/decom"
     $.extend(myAction, {
         test: function () {
-            $.ajax({
+            calculateData.ajax = $.ajax({
                 url: url,
                 type: 'POST',
                 dataType: 'json',
-                data: JSON.stringify(listOfListOfNames),
+                data: JSON.stringify(calculateData.listOfListOfNames),
                 cache: false,
                 headers: {
                     'Content-Type': 'application/json'
@@ -394,9 +422,19 @@ const calculateData = function () {
                     $('p#JMeasure').text(JMeasure.toFixed(3))
 
                     $('p#SpuriousTuples, p#saving, p#JMeasure').css('color', 'green')
+                    calculateData.listOfListOfNames = []
                 },
                 error: function (e) {
                     console.log(e)
+                    let JMeasure = 0
+                    $('div.cluster').children('.JMeasure').each(function () {
+                        JMeasure = Math.max(JMeasure, Number($(this).text()))
+                    })
+                    $('p#JMeasure').text(JMeasure.toFixed(3))
+                    $('p#saving').text('Too many tuples')
+                    $('p#SpuriousTuples').text('Too many tuples')
+
+                    $('p#SpuriousTuples, p#saving, p#JMeasure').css('color', 'yellow')
                 }
             });
         }

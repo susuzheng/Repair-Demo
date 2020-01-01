@@ -23,5 +23,9 @@
     "line-reader": "^0.4.0",
     "request": "^2.88.0",
     "treant-js": "^1.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/susuzheng/Repair-Demo"
   }
 }
