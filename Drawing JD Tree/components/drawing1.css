@@ -11,16 +11,15 @@ body {
 }
 
 div.container {
-    border: 5px solid lightgray;
+    border: 1px solid lightgray;
     border-radius: 5px;
     width: 20%;
     padding: 0 20px;
-    height: 98%;
+    height: 100%;
     overflow: scroll;
 }
 
 div#info {
-    position: fixed;
     top: 5px;
     right: 5px;
     display: flex;
@@ -28,7 +27,7 @@ div#info {
 }
 
 div#right {
-    width: 80%;
+    width: 60%;
 }
 
 div#tree {

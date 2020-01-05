@@ -51,7 +51,7 @@ const checkValidity = (filePath) => {
     for (let k = 0; k < list.length; k++) {
         allSepList[k] = list[k].sep;
         sepCluster[k] = list[k].cluster[0];
-        sepJ[k] = list[k].cluster[1];
+        sepJ[k] = Number(list[k].cluster[1]);
     }
-    return {validity: true, allSepList, sepCluster, sepJ, attrNum}
+    return {validity: true, allSepList, indexNewCluster: sepCluster, sepJ, attrNum}
 }
