@@ -1,6 +1,3 @@
 [submodule "RelationalDecomposition"]
 	path = RelationalDecomposition
 	url = https://github.com/khangp0000/RelationalDecomposition.git
-[submodule "SpuriousTuplesWebApp"]
-	path = SpuriousTuplesWebApp
-	url = https://github.com/khangp0000/SpuriousTuplesWebApp.git
