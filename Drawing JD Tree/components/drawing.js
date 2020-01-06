@@ -19,7 +19,7 @@ let clusterNameIndexMap_tree, clusterNameIndexMap_plan
 $.get("http://localhost:9876/api/spurioustuples/db", function (res) {
     numberOfCells = Number(res.numCells)
     numberOfTuples = Number(res.numTuples)
-
+    legendInfo = res.header
 })
 
 ipcRenderer.send('get-item')
