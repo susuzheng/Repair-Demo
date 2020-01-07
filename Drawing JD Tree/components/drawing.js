@@ -11,6 +11,8 @@ let listOfUsedSepIndex = [];
 let listOfUsedSep = [];
 let listOfJ = [];
 let legendInfo = []
+let nextClusterIndexToSplit_tree = []
+let nextClusterIndexToSplit_plan = []
 let clusterNameIndexMap_tree, clusterNameIndexMap_plan
 
 
@@ -70,7 +72,7 @@ ipcRenderer.on('send-item', (e, item1) => {
 
         // update list when double clicking on a list element
         $li.on('dblclick', function () {
-            dblclickListUpdate($li, $(this))
+            dblclickListUpdate($li.index($(this)), $(this).text().split(RIGHT_ARROW)[0])
         });
 
         hoverAction()
@@ -79,9 +81,9 @@ ipcRenderer.on('send-item', (e, item1) => {
 })
 
 // -------------- Drawing --------------
-let nextClusterIndexToSplit_tree = []
-let nextClusterIndexToSplit_plan = []
 const generateGraphWithSepList = function (isTree) {
+    treeClusterIndexToPlanClusterIndex = {1: 1}
+    planClusterIndexToTreeClusterIndex = {1: 1}
     drawInit(item)
     listOfUsedSepIndex.forEach((sepIndex, countOfSep) => {
         let treeNodeIndex = nextClusterIndexToSplit_tree[countOfSep]
@@ -136,11 +138,8 @@ const askAndGetUserSelectedClusterIndex = function (candidateIndexes, _callback)
     })
 }
 
-const dblclickListUpdate = function ($li, $this) {
-    let sepText = $this.text().split(RIGHT_ARROW)[0]
-    let index = $li.index($this)
+const dblclickListUpdate = function (index, sepText) {
     let candidateIndexes_tree = getListOfCandidateClustersIndex(sepText, index, tree_config)
-    console.log(candidateIndexes_tree)
     let candidateIndexes_plan = candidateIndexes_tree.map(treeIndex => treeClusterIndexToPlanClusterIndex[treeIndex])
     let selectedClusterIndex_tree
     let selectedClusterIndex_plan
@@ -170,8 +169,6 @@ const dblclickListUpdate = function ($li, $this) {
 }
 
 const getListOfCandidateClustersIndex = function (sepText, index, config) {
-    console.log('sepText:', sepText)
-    console.log('index:', index)
     let indexListOfCandidateClusters = []
     for (let i = 1; i < config.length; i++) {
         if (isCluster(config[i]) && validSepHere(sepText, index, config[i])) {
@@ -209,7 +206,6 @@ const hoverAction = function () {
         }).hide()
 
         $cluster.on('mouseleave', function () {
-            console.log(IDs)
             IDs.forEach((index) => {
                 $li.eq(index).show()
             })
@@ -222,13 +218,26 @@ const mergeAction = function () {
     $("div.separator").on('dblclick', function () {
         $('li').show()
         // node-name is separated by ',' but sep are stored with ', '
-        let text = $(this).children('.node-name').text().split(',').join(CLUSTER_SEP)
+        let text = $(this).children('.node-name').text()
         let index = listOfUsedSep.indexOf(text)
-        nextClusterIndexToSplit_tree.splice(index, 1)
         listOfUsedSepIndex.splice(index, 1)
         listOfUsedSep.splice(index, 1)
+        let oldListOfUsedSepIndex = listOfUsedSepIndex
+        let oldListOfUsedSep = listOfUsedSep
+        listOfUsedSepIndex = []
+        listOfUsedSep = []
         listOfJ.splice(index, 1)
-        generateGraphWithSepList(isTreeConfig(chart_config))
+        nextClusterIndexToSplit_tree = []
+        nextClusterIndexToSplit_plan = []
+        treeClusterIndexToPlanClusterIndex = {1: 1};
+        planClusterIndexToTreeClusterIndex = {1: 1};
+        drawInit(item)
+        chart.destroy()
+        chart = new Treant(chart_config)
+
+        for (let i = 0; i < oldListOfUsedSep.length; i++) {
+            dblclickListUpdate(oldListOfUsedSepIndex[i], oldListOfUsedSep[i])
+        }
     })
 }
 
@@ -238,11 +247,6 @@ const generateNewGraph = (sepIndex, nodeIndex, config) => {
     let listOfSep = sepText.split(CLUSTER_SEP).sort((a, b) => (Number(a) - Number(b)))
     let listOfNewClusters = newClustersString.substring(1, newClustersString.length - 1).split('},{') //array
     let node = config[nodeIndex]
-    if (node === undefined) {
-        console.log(isTreeConfig(config))
-        console.log(nodeIndex)
-    }
-    let oldNode = node
     let parentCluName = node.text.name.split(CLUSTER_SEP)
     let originalCluName = parentCluName
     let clusterNameIndexMap = {}
