@@ -24,6 +24,7 @@ div#info {
     right: 5px;
     display: flex;
     flex-direction: column;
+    font-size: 1.5vw;
 }
 
 div#right {
@@ -36,6 +37,7 @@ div#tree {
 
 div.list {
     text-align: center;
+    font-size: 1.5vw;
 }
 
 .list ul {

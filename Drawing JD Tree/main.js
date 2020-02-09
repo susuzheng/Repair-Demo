@@ -1,6 +1,5 @@
 // Modules
 const {app, BrowserWindow, dialog, ipcMain} = require('electron');
-const d3 = require('d3')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -20,7 +19,7 @@ ipcMain.on('open-drawing', (e, item1) => {
 })
 
 ipcMain.on('get-item', e => {
-    e.sender.send('send-item', item, lr)
+    e.sender.send('send-item', item)
 })
 
 // Create a new BrowserWindow when `app` is ready
