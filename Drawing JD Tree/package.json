@@ -19,7 +19,7 @@
     "d3": "^5.14.2",
     "d3-fetch": "latest",
     "express": "^4.17.1",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "line-reader": "^0.4.0",
     "request": "^2.88.0",
     "treant-js": "^1.0.1"
