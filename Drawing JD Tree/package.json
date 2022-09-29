@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "csv": "^5.3.0",
-    "d3": "^5.14.2",
+    "d3": "^7.6.1",
     "d3-fetch": "latest",
     "express": "^4.17.1",
     "jquery": "^3.4.1",
